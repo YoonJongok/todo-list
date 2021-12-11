@@ -1,68 +1,32 @@
 import React, { ButtonHTMLAttributes } from "react";
 import { useForm } from "react-hook-form";
-import { atom, useRecoilState } from "recoil";
-interface IForm {
-  toDo: string;
-}
-
-export enum CategoryEnum {
-  "TO_DO",
-  "Doing",
-  "Done",
-}
-interface IToDo {
-  id: number;
-  text: string;
-  category: CategoryEnum;
-}
-
-const todoState = atom<IToDo[]>({
-  key: "toDos",
-  default: [],
-});
+import { atom, useRecoilState, useRecoilValue } from "recoil";
+import { CategoryEnum, categoryState, todoSelector, todoState } from "../atoms";
+import CreateTodo from "./CreateTodo";
+import Todo from "./Todo";
 
 export const ToDoList = () => {
-  const [toDos, setTodos] = useRecoilState(todoState);
-  const { register, handleSubmit, setValue } = useForm<IForm>();
-  const handleValid = ({ toDo }: IForm) => {
-    console.log("add to do", toDo);
-    setValue("toDo", "");
-    setTodos((oldTodo) => [
-      { text: toDo, id: Date.now(), category: CategoryEnum.TO_DO },
-      ...oldTodo,
-    ]);
+  const toDos = useRecoilValue(todoSelector);
+  const [category, setCategory] = useRecoilState(categoryState);
+  const onInput = (event: React.FormEvent<HTMLSelectElement>) => {
+    setCategory(event.currentTarget.value as any);
   };
-
-  const handleBtnClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    console.log(event.currentTarget.value);
-  };
+  console.log(toDos);
   return (
     <div>
-      <form onSubmit={handleSubmit(handleValid)}>
-        <input
-          {...register("toDo", {
-            required: "Please write a To Do",
-          })}
-          placeholder="Write a to do"
-        />
-        <button>Add</button>
-        <ul>
-          {toDos.map((todo) => (
-            <li key={todo.id}>
-              {todo.text}
-              <button value={CategoryEnum.TO_DO} onClick={handleBtnClick}>
-                {CategoryEnum[0]}
-              </button>
-              <button value={CategoryEnum.Doing} onClick={handleBtnClick}>
-                {CategoryEnum[1]}
-              </button>
-              <button value={CategoryEnum.Done} onClick={handleBtnClick}>
-                {CategoryEnum[2]}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </form>
+      <h1>To Dos</h1>
+      <hr />
+      <select value={category} onInput={onInput}>
+        <option value={CategoryEnum.TO_DO}>To Do</option>
+        <option value={CategoryEnum.DOING}>Doing</option>
+        <option value={CategoryEnum.DONE}>Done</option>
+      </select>
+      <CreateTodo />
+      <ul>
+        {toDos.map((todo) => (
+          <Todo key={todo.id} {...todo} />
+        ))}
+      </ul>
     </div>
   );
 };
